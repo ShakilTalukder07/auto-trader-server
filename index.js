@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
@@ -17,13 +17,30 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const categoryCollection = client.db('resala').collection('category')
+        const carsCollection = client.db('resala').collection('cars')
 
-        app.get('/category', async(req, res)=>{
+        app.get('/category', async (req, res) => {
             const query = {}
             const cursor = categoryCollection.find(query)
             const category = await cursor.toArray()
             res.send(category)
         });
+
+        app.get('/category/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const category = await categoryCollection.findOne(query)
+            // console.log(category);
+            res.send(category)
+        });
+
+        app.get('/cars/:categoryName', async (req, res) => {
+            const name = req.params.categoryName
+            const query = { category_name: name }
+            const category = await carsCollection.find(query).toArray()
+            // console.log(category);
+            res.send(category)
+        })
     }
     finally {
 
