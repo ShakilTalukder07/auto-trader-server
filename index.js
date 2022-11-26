@@ -15,21 +15,21 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.1ndgjy2.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-function verifyJWT(req, res, next){
+function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
-    if(!authHeader){
+    if (!authHeader) {
         return res.status(401).send('unauthorized access')
     }
     const token = authHeader.split(' ')[1];
 
-    jwt.verify(token, process.env.ACCESS_TOKEN, function( err, decoded){
-        if(err){
-            return res.status(403).send({ message: 'forbidden access'})
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
         }
         req.decoded = decoded;
         next();
     })
-} 
+}
 
 async function run() {
     try {
@@ -37,6 +37,7 @@ async function run() {
         const carsCollection = client.db('resala').collection('cars')
         const bookingsCollection = client.db('resala').collection('bookings')
         const usersCollection = client.db('resala').collection('users')
+        const productsCollection = client.db('resala').collection('products')
 
         app.get('/category', async (req, res) => {
             const query = {}
@@ -83,12 +84,30 @@ async function run() {
             const email = req.query.email
             const query = { email: email }
             const user = await usersCollection.findOne(query)
-            console.log(user);
             if (user) {
                 const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
                 return res.send({ accessToken: token })
             }
             res.status(403).send({ accessToken: '' })
+        });
+
+        app.post('/products', async (req, res) => {
+            const products = req.body
+            const result = await productsCollection.insertOne(products)
+            res.send(result)
+        });
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email }
+            const user = await usersCollection.findOne(query)
+            res.send({ isSeller: user?.role === 'seller' })
+        })
+
+        app.get('/users', async (req, res) => {
+            const query = {}
+            const users = await usersCollection.find(query).toArray()
+            res.send(users);
         })
 
         app.post('/users', async (req, res) => {
@@ -96,6 +115,19 @@ async function run() {
             const result = await usersCollection.insertOne(users)
             res.send(result)
         });
+
+        app.put('/users/admin/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    role: 'admin'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, options, updatedDoc)
+            res.send(result)
+        })
     }
     finally {
 
