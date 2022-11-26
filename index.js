@@ -15,6 +15,22 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.1ndgjy2.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+function verifyJWT(req, res, next){
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+        return res.status(401).send('unauthorized access')
+    }
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN, function( err, decoded){
+        if(err){
+            return res.status(403).send({ message: 'forbidden access'})
+        }
+        req.decoded = decoded;
+        next();
+    })
+} 
+
 async function run() {
     try {
         const categoryCollection = client.db('resala').collection('category')
@@ -33,7 +49,6 @@ async function run() {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const category = await categoryCollection.findOne(query)
-            // console.log(category);
             res.send(category)
         });
 
@@ -41,7 +56,6 @@ async function run() {
             const name = req.params.categoryName
             const query = { category_name: name }
             const category = await carsCollection.find(query).toArray()
-            // console.log(category);
             res.send(category)
         });
 
@@ -54,23 +68,34 @@ async function run() {
 
         app.post('/bookings', async (req, res) => {
             const booking = req.body
-            // console.log(booking);
             const result = await bookingsCollection.insertOne(booking)
             res.send(result)
         });
 
-        app.get('/bookings', async (req, res) => {
+        app.get('/bookings', verifyJWT, async (req, res) => {
             const email = req.query.email
             const query = { userEmail: email }
             const bookings = await bookingsCollection.find(query).toArray()
             res.send(bookings)
         });
 
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+            console.log(user);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1d' })
+                return res.send({ accessToken: token })
+            }
+            res.status(403).send({ accessToken: '' })
+        })
+
         app.post('/users', async (req, res) => {
             const users = req.body
             const result = await usersCollection.insertOne(users)
             res.send(result)
-        })
+        });
     }
     finally {
 
