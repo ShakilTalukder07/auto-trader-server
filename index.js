@@ -104,6 +104,14 @@ async function run() {
             res.send(products)
         });
 
+        // delete a product
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const result = await productsCollection.deleteOne(filter);
+            res.send(result);
+        })
+
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email
             const query = { email }
