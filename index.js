@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
+const { query } = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -92,9 +93,15 @@ async function run() {
         });
 
         app.post('/products', async (req, res) => {
-            const products = req.body
-            const result = await productsCollection.insertOne(products)
-            res.send(result)
+            const products = req.body;
+            const result = await productsCollection.insertOne(products);
+            res.send(result);
+        })
+
+        app.get('/products', async (req, res) => {
+            const query = {};
+            const products = await productsCollection.find(query).toArray()
+            res.send(products)
         });
 
         app.get('/users/:email', async (req, res) => {
@@ -102,13 +109,13 @@ async function run() {
             const query = { email }
             const user = await usersCollection.findOne(query)
             res.send({ isSeller: user?.role === 'seller' })
-        })
+        });
 
         app.get('/users', async (req, res) => {
             const query = {}
             const users = await usersCollection.find(query).toArray()
             res.send(users);
-        })
+        });
 
         app.post('/users', async (req, res) => {
             const users = req.body
@@ -116,18 +123,25 @@ async function run() {
             res.send(result)
         });
 
-        app.put('/users/admin/:id', async (req, res) => {
-            const id = req.params.id
-            const filter = { _id: ObjectId(id) }
-            const options = { upsert: true };
-            const updatedDoc = {
-                $set: {
-                    role: 'admin'
-                }
-            }
-            const result = await usersCollection.updateOne(filter, options, updatedDoc)
-            res.send(result)
-        })
+        // app.get('/users/:email', async (req, res) => {
+        //     const email = req.params.email
+        //     const query = { email }
+        //     const user = await usersCollection.findOne(query)
+        //     res.send({ isSeller: user?.role === 'admin' })
+        // })
+
+        // app.put('/users/admin/:id', async (req, res) => {
+        //     const id = req.params.id
+        //     const filter = { _id: ObjectId(id) }
+        //     const options = { upsert: true };
+        //     const updatedDoc = {
+        //         $set: {
+        //             role: 'admin'
+        //         }
+        //     }
+        //     const result = await usersCollection.updateOne(filter, options, updatedDoc)
+        //     res.send(result)
+        // })
     }
     finally {
 
