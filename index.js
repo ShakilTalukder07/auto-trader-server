@@ -102,7 +102,7 @@ async function run() {
             res.status(403).send({ accessToken: '' })
         });
 
-        app.post('/products',  async (req, res) => {
+        app.post('/products', async (req, res) => {
             const products = req.body;
             const result = await productsCollection.insertOne(products);
             res.send(result);
@@ -122,6 +122,7 @@ async function run() {
             res.send(result);
         })
 
+        // get seller from usersCollection
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email
             const query = { email }
@@ -129,12 +130,21 @@ async function run() {
             res.send({ isSeller: user?.role === 'seller' })
         });
 
-        // app.get('/users/:role', async (req, res) => {
-        //     const role = req.params.userRole
-        //     const query = { role: name }
-        //     const user = await usersCollection.findOne(query).toArray()
-        //     res.send()
-        // });
+
+        // get all buyers
+        app.get('/allBuyers', async (req, res) => {
+            const query = { role: "buyer" }
+            const user = await usersCollection.find(query).toArray()
+            res.send(user)
+        });
+
+        // get all sellers
+        app.get('/allSellers', async (req, res) => {
+            const query = { role: "seller" }
+            const user = await usersCollection.find(query).toArray()
+            res.send(user)
+        });
+
 
         app.get('/users', async (req, res) => {
             const query = {}
