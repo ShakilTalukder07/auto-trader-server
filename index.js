@@ -41,6 +41,7 @@ async function run() {
         const usersCollection = client.db('resala').collection('users')
         const productsCollection = client.db('resala').collection('products')
         const paymentsCollection = client.db('resala').collection('payments')
+        const advertiseCollection = client.db('resala').collection('advertise')
 
         app.get('/category', async (req, res) => {
             const query = {}
@@ -131,11 +132,54 @@ async function run() {
         });
 
 
+        //advertise a product
+        app.post('/advertiseProduct', async (req, res) => {
+            const advertiseProduct = req.body;
+            const result = await advertiseCollection.insertOne(advertiseProduct)
+            res.send(result)
+        })
+
+        //show advertise products
+        app.get('/advertiseProduct', async (req, res) => {
+            const query = {}
+            const result = await advertiseCollection.find(query).toArray()
+            res.send(result)
+        });
+
+        // get admin from userCollection for admin route
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await usersCollection.findOne(query)
+            if (query) {
+                res.send(result)
+            }
+        })
+
+        // get buyer from buyerCollection for buyer route
+        app.get('/buyer/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email }
+            const result = await usersCollection.findOne(query)
+            if (query) {
+                res.send(result)
+            }
+        })
+
+
         // get all buyers
         app.get('/allBuyers', async (req, res) => {
             const query = { role: "buyer" }
             const user = await usersCollection.find(query).toArray()
             res.send(user)
+        });
+
+        //delete a buyer
+        app.delete('/allBuyers/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
         });
 
         // get all sellers
@@ -145,6 +189,12 @@ async function run() {
             res.send(user)
         });
 
+        app.delete('/allSellers/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) };
+            const result = await usersCollection.deleteOne(filter);
+            res.send(result);
+        })
 
         app.get('/users', async (req, res) => {
             const query = {}
@@ -190,25 +240,6 @@ async function run() {
             res.send(result);
         })
 
-        // app.get('/users/:email', async (req, res) => {
-        //     const email = req.params.email
-        //     const query = { email }
-        //     const user = await usersCollection.findOne(query)
-        //     res.send({ isSeller: user?.role === 'admin' })
-        // })
-
-        // app.put('/users/admin/:id', async (req, res) => {
-        //     const id = req.params.id
-        //     const filter = { _id: ObjectId(id) }
-        //     const options = { upsert: true };
-        //     const updatedDoc = {
-        //         $set: {
-        //             role: 'admin'
-        //         }
-        //     }
-        //     const result = await usersCollection.updateOne(filter, options, updatedDoc)
-        //     res.send(result)
-        // })
     }
     finally {
 
