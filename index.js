@@ -136,15 +136,28 @@ async function run() {
             const socialUser = req.body;
             const result = await usersCollection.insertOne(socialUser)
             res.send(result)
-        })
+        });
 
+        // set buyers status 
+        app.put('/users/seller/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'verified'
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
 
         //advertise a product
         app.post('/advertiseProduct', async (req, res) => {
             const advertiseProduct = req.body;
             const result = await advertiseCollection.insertOne(advertiseProduct)
             res.send(result)
-        })
+        });
 
         //show advertise products
         app.get('/advertiseProduct', async (req, res) => {
