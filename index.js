@@ -131,6 +131,13 @@ async function run() {
             res.send({ isSeller: user?.role === 'seller' })
         });
 
+        // for social user Login
+        app.post('/users', async (req, res) => {
+            const socialUser = req.body;
+            const result = await usersCollection.insertOne(socialUser)
+            res.send(result)
+        })
+
 
         //advertise a product
         app.post('/advertiseProduct', async (req, res) => {
