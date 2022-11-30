@@ -103,17 +103,33 @@ async function run() {
             res.status(403).send({ accessToken: '' })
         });
 
+        // post a product
         app.post('/products', async (req, res) => {
             const products = req.body;
             const result = await productsCollection.insertOne(products);
             res.send(result);
         })
 
+        // get all products
         app.get('/products', async (req, res) => {
             const query = {};
             const products = await productsCollection.find(query).toArray()
             res.send(products)
         });
+
+        // update product status
+        app.put('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    status: 'sold'
+                }
+            }
+            const result = await productsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+        })
 
         // delete a product
         app.delete('/products/:id', async (req, res) => {
