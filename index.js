@@ -72,6 +72,7 @@ async function run() {
             res.send(cars)
         })
 
+        // post data from modal
         app.post('/bookings', async (req, res) => {
             const booking = req.body
             const result = await bookingsCollection.insertOne(booking)
